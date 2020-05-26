@@ -14,16 +14,12 @@ import Adafruit_BluefruitLE
 # Enable debug output.
 #logging.basicConfig(level=logging.DEBUG)
 
-# Define service and characteristic UUIDs used by the UART service.
+# Define service and characteristic UUIDs used by the Automation IO service.
 AUTOMATION_IO_SERVICE_UUID = uuid.UUID('00001815-0000-1000-8000-00805F9B34FB')
 ANALOG_CHAR_UUID = uuid.UUID('00002A58-0000-1000-8000-00805F9B34FB')
-UART_SERVICE_UUID = uuid.UUID('6E400001-B5A3-F393-E0A9-E50E24DCCA9E')
-TX_CHAR_UUID      = uuid.UUID('6E400002-B5A3-F393-E0A9-E50E24DCCA9E')
-RX_CHAR_UUID      = uuid.UUID('6E400003-B5A3-F393-E0A9-E50E24DCCA9E')
 
 # Get the BLE provider for the current platform.
 ble = Adafruit_BluefruitLE.get_provider()
-
 
 # Main function implements the program logic so it can run in a background
 # thread.  Most platforms require the main thread to handle GUI events and other
@@ -40,20 +36,20 @@ def main():
     adapter.power_on()
     print('Using adapter: {0}'.format(adapter.name))
 
-    # Disconnect any currently connected UART devices.  Good for cleaning up and
-    # starting from a fresh state.
-    print('Disconnecting any connected UART devices...')
-    ble.disconnect_devices([UART_SERVICE_UUID])
+    # Disconnect any currently connected Automation IO devices.
+    # Good for cleaning up and starting from a fresh state.
+    print('Disconnecting any connected Automation IO devices...')
+    ble.disconnect_devices([AUTOMATION_IO_SERVICE_UUID])
 
-    # Scan for UART devices.
+    # Scan for Automationm IO devices.
     print('Searching for Automation IO device...')
     try:
         adapter.start_scan()
-        # Search for the first UART device found (will time out after 60 seconds
+        # Search for the first Automation IO device found (will time out after 60 seconds
         # but you can specify an optional timeout_sec parameter to change it).
-        device = ble.find_device(service_uuids=[UART_SERVICE_UUID])
+        device = ble.find_device(service_uuids=[AUTOMATION_IO_SERVICE_UUID])
         if device is None:
-            raise RuntimeError('Failed to find UART device!')
+            raise RuntimeError('Failed to find Automation IO device!')
     finally:
         # Make sure scanning is stopped before exiting.
         adapter.stop_scan()
@@ -71,18 +67,11 @@ def main():
         print('Discovering services...')
         device.discover([AUTOMATION_IO_SERVICE_UUID], [ANALOG_CHAR_UUID])
 
-        # Find the UART service and its characteristics.
+        # Find the Automation IO service and its characteristics.
         automation = device.find_service(AUTOMATION_IO_SERVICE_UUID)
         analog = automation.find_characteristic(ANALOG_CHAR_UUID)
-        # uart = device.find_service(UART_SERVICE_UUID)
-        # rx = uart.find_characteristic(RX_CHAR_UUID)
-        # tx = uart.find_characteristic(TX_CHAR_UUID)
 
-        # Write a string to the TX characteristic.
-        # print('Sending message to device...')
-        # tx.write_value('Hello world!\r\n'.encode())
-
-        # Function to receive RX characteristic changes.  Note that this will
+        # Function to receive Analog characteristic changes.  Note that this will
         # be called on a different thread so be careful to make sure state that
         # the function changes is thread safe.  Use queue or other thread-safe
         # primitives to send data to other threads.
@@ -90,8 +79,8 @@ def main():
             value = int.from_bytes(data, byteorder='little')
             print('Received: {0}'.format(value))
 
-        # Turn on notification of RX characteristics using the callback above.
-        print('Subscribing to RX characteristic changes...')
+        # Turn on notification of Analog characteristics using the callback above.
+        print('Subscribing to Analog characteristic changes...')
         analog.start_notify(received)
 
         # Now just wait for 30 seconds to receive data.
