@@ -83,9 +83,9 @@ def main():
         print('Subscribing to Analog characteristic changes...')
         analog.start_notify(received)
 
-        # Now just wait for 30 seconds to receive data.
-        print('Waiting 60 seconds to receive data from the device...')
-        time.sleep(60)
+        # Wait forever. Notify handling happens in another thread
+        while True:
+          time.sleep(1)
     finally:
         # Make sure device is disconnected on exit.
         device.disconnect()
