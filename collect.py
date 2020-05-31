@@ -76,7 +76,7 @@ def main():
         # the function changes is thread safe.  Use queue or other thread-safe
         # primitives to send data to other threads.
         def received(data):
-            value = int.from_bytes(data, byteorder='little')
+            value = int.from_bytes(data.encode(), byteorder='little')
             print('Received: {0}'.format(value))
 
         # Turn on notification of Analog characteristics using the callback above.
