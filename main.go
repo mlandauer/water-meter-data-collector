@@ -8,25 +8,19 @@ import (
 	"time"
 
 	"github.com/JuulLabs-OSS/ble"
-	"github.com/JuulLabs-OSS/ble/darwin"
+	"github.com/JuulLabs-OSS/ble/examples/lib/dev"
 )
 
 func filter(a ble.Advertisement) bool {
 	return a.LocalName() == "Water Meter"
 }
 
-// func handler(a ble.Advertisement) {
-// 	fmt.Println("local name:", a.LocalName())
-// 	fmt.Println("RSSI:", a.RSSI())
-// }
-
 func handler(req []byte) {
 	fmt.Println(binary.LittleEndian.Uint16(req))
 }
 
 func main() {
-	// First let's just try doing some scanning for things that are advertising
-	device, err := darwin.NewDevice()
+	device, err := dev.NewDevice("default")
 	if err != nil {
 		log.Fatal(err)
 	}
