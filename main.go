@@ -35,12 +35,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if len(services) == 0 {
+		log.Fatal("Couldn't find automation IO service")
+	}
 	service := services[0]
 	characteristics, err := cl.DiscoverCharacteristics([]ble.UUID{}, service)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// We're only expecting one characteristic - analog
+	if len(characteristics) != 1 {
+		log.Fatalf("Expected one characteristic. Found %v", len(characteristics))
+	}
 	analog := characteristics[0]
 	err = cl.Subscribe(analog, false, handler)
 	if err != nil {
