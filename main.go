@@ -19,6 +19,9 @@ func handler(req []byte) {
 	fmt.Println(binary.LittleEndian.Uint16(req))
 }
 
+var automationIOServiceUUID = ble.UUID16(0x1815)
+var analogCharacteristicUUID = ble.UUID16(0x2a58)
+
 func main() {
 	device, err := dev.NewDevice("default")
 	if err != nil {
@@ -31,7 +34,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	services, err := cl.DiscoverServices([]ble.UUID{ble.UUID16(0x1815)})
+	services, err := cl.DiscoverServices([]ble.UUID{automationIOServiceUUID})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,15 +42,20 @@ func main() {
 		log.Fatal("Couldn't find automation IO service")
 	}
 	service := services[0]
-	characteristics, err := cl.DiscoverCharacteristics([]ble.UUID{}, service)
+	characteristics, err := cl.DiscoverCharacteristics([]ble.UUID{analogCharacteristicUUID}, service)
 	if err != nil {
 		log.Fatal(err)
 	}
-	// We're only expecting one characteristic - analog
-	if len(characteristics) != 1 {
-		log.Fatalf("Expected one characteristic. Found %v", len(characteristics))
+	if len(characteristics) == 0 {
+		log.Fatal("Couldn't find analog characteristic")
 	}
 	analog := characteristics[0]
+	// Looks like (at least on Linux) we also need to explicitly discover the descriptors
+	// otherwise later operations fail
+	_, err = cl.DiscoverDescriptors(nil, analog)
+	if err != nil {
+		log.Fatal(err)
+	}
 	err = cl.Subscribe(analog, false, handler)
 	if err != nil {
 		log.Fatal(err)
