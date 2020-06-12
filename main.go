@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/JuulLabs-OSS/ble"
 	"github.com/JuulLabs-OSS/ble/examples/lib/dev"
@@ -60,5 +59,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	time.Sleep(60 * time.Second)
+	select {}
 }
