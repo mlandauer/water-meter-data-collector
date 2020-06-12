@@ -29,10 +29,12 @@ func main() {
 	ble.SetDefaultDevice(device)
 
 	ctx := context.Background()
+	log.Println("Connecting to water meter...")
 	cl, err := ble.Connect(ctx, filter)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Connected")
 	services, err := cl.DiscoverServices([]ble.UUID{automationIOServiceUUID})
 	if err != nil {
 		log.Fatal(err)
@@ -55,6 +57,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Subscribed to notifications")
 	err = cl.Subscribe(analog, false, handler)
 	if err != nil {
 		log.Fatal(err)
