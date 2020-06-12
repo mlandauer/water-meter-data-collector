@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/JuulLabs-OSS/ble"
 	"github.com/JuulLabs-OSS/ble/examples/lib/dev"
@@ -28,7 +29,9 @@ func main() {
 	}
 	ble.SetDefaultDevice(device)
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
 	log.Println("Connecting to water meter...")
 	cl, err := ble.Connect(ctx, filter)
 	if err != nil {
