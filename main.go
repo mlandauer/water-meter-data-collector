@@ -16,10 +16,14 @@ func filter(a ble.Advertisement) bool {
 }
 
 func handler(req []byte) {
-	fmt.Println(binary.LittleEndian.Uint16(req))
+	fmt.Printf("distance: %v cm\n", binary.LittleEndian.Uint16(req))
 }
 
-var automationIOServiceUUID = ble.UUID16(0x1815)
+func batteryLevelHandler(req []byte) {
+	fmt.Printf("battery: %v\n", req[0])
+}
+
+var batteryLevelCharacteristicUUID = ble.UUID16(0x2a19)
 var analogCharacteristicUUID = ble.UUID16(0x2a58)
 
 func main() {
@@ -49,33 +53,32 @@ func main() {
 		close(done)
 	}()
 
-	services, err := cl.DiscoverServices([]ble.UUID{automationIOServiceUUID})
+	profile, err := cl.DiscoverProfile(true)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if len(services) == 0 {
-		log.Fatal("Couldn't find automation IO service")
-	}
-	service := services[0]
-	characteristics, err := cl.DiscoverCharacteristics([]ble.UUID{analogCharacteristicUUID}, service)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(characteristics) == 0 {
+
+	analog := profile.FindCharacteristic(ble.NewCharacteristic(analogCharacteristicUUID))
+	if analog == nil {
 		log.Fatal("Couldn't find analog characteristic")
 	}
-	analog := characteristics[0]
-	// Looks like (at least on Linux) we also need to explicitly discover the descriptors
-	// otherwise later operations fail
-	_, err = cl.DiscoverDescriptors(nil, analog)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Subscribed to notifications")
+
 	err = cl.Subscribe(analog, false, handler)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Subscribed to analog notifications")
+
+	batteryLevel := profile.FindCharacteristic(ble.NewCharacteristic(batteryLevelCharacteristicUUID))
+	if batteryLevel == nil {
+		log.Fatal("Couldn't find battery level characteristic")
+	}
+
+	err = cl.Subscribe(batteryLevel, false, batteryLevelHandler)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Subscribed to battery notifications")
 
 	<-done
 }
