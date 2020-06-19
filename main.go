@@ -38,6 +38,17 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println("Connected")
+
+	done := make(chan struct{})
+	// Normally, the connection is disconnected by us after our exploration.
+	// However, it can be asynchronously disconnected by the remote peripheral.
+	// So we wait(detect) the disconnection in the go routine.
+	go func() {
+		<-cl.Disconnected()
+		log.Println("Disconnected")
+		close(done)
+	}()
+
 	services, err := cl.DiscoverServices([]ble.UUID{automationIOServiceUUID})
 	if err != nil {
 		log.Fatal(err)
@@ -65,5 +76,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	select {}
+
+	<-done
 }
