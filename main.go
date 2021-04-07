@@ -106,7 +106,13 @@ func captureAndRecord() {
 }
 
 func main() {
-	go captureAndRecord()
+	go func() {
+		for {
+			// This will exit if the connection disconnects
+			// Loop to ensure we reconnect
+			captureAndRecord()
+		}
+	}()
 
 	http.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":8080", nil)
