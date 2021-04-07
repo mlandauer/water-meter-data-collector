@@ -5,10 +5,28 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/JuulLabs-OSS/ble"
 	"github.com/JuulLabs-OSS/ble/examples/lib/dev"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+var (
+	waterHeight = promauto.NewGauge(prometheus.GaugeOpts{
+		Subsystem: "water",
+		Name:      "water_height_uncalibrated",
+		Help:      "Water height in arbitrary units",
+	})
+	battery = promauto.NewGauge(prometheus.GaugeOpts{
+		Subsystem: "water",
+		Name:      "battery",
+		Help:      "Percentage full of the battery",
+	})
 )
 
 func filter(a ble.Advertisement) bool {
@@ -16,17 +34,21 @@ func filter(a ble.Advertisement) bool {
 }
 
 func handler(req []byte) {
-	fmt.Printf("water depth (uncalibrated): %v\n", binary.LittleEndian.Uint16(req))
+	value := binary.LittleEndian.Uint16(req)
+	fmt.Printf("water depth (uncalibrated): %v\n", value)
+	waterHeight.Set(float64(value))
 }
 
 func batteryLevelHandler(req []byte) {
-	fmt.Printf("battery: %v\n", req[0])
+	value := req[0]
+	fmt.Printf("battery: %v\n", value)
+	battery.Set(float64(value))
 }
 
 var batteryLevelCharacteristicUUID = ble.UUID16(0x2a19)
 var analogCharacteristicUUID = ble.UUID16(0x2a58)
 
-func main() {
+func captureAndRecord() {
 	device, err := dev.NewDevice("default")
 	if err != nil {
 		log.Fatal(err)
@@ -81,4 +103,11 @@ func main() {
 	log.Println("Subscribed to battery notifications")
 
 	<-done
+}
+
+func main() {
+	go captureAndRecord()
+
+	http.Handle("/metrics", promhttp.Handler())
+	http.ListenAndServe(":8080", nil)
 }
