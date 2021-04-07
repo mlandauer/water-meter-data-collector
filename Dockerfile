@@ -15,3 +15,5 @@ COPY --from=builder /go/bin/water-meter-data-collector /go/bin/water-meter-data-
 # COPY --from=builder --chown=yinyo:0 /tmp /tmp
 
 CMD ["/go/bin/water-meter-data-collector"]
+
+EXPOSE 8080
