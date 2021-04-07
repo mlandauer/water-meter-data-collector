@@ -16,7 +16,7 @@ func filter(a ble.Advertisement) bool {
 }
 
 func handler(req []byte) {
-	fmt.Printf("distance: %v cm\n", binary.LittleEndian.Uint16(req))
+	fmt.Printf("water depth (uncalibrated): %v\n", binary.LittleEndian.Uint16(req))
 }
 
 func batteryLevelHandler(req []byte) {
